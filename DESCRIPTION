@@ -1,11 +1,26 @@
 Package: TableCleaneR
-Title: What the Package Does (One Line, Title Case)
+Type: Package
+Title: Collapse Duplicate Key Groups in Tibbles with Safe Concatenation
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Authors@R:
+    person("Benoît", "Simon-Bouhet", email = "bsimonbo@univ-lr.fr", role = c("aut", "cre"))
+Description: Tools to enforce uniqueness of key combinations in tabular data by
+    collapsing duplicate rows. For each key group, selected columns can be
+    concatenated to preserve information, while other divergent fields are
+    replaced by typed missing values to avoid silent conflicts. Companion
+    helpers return candidate rows and subsets of collapsed results to support
+    auditing and quality control workflows in tidyverse pipelines.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Imports:
+    dplyr,
+    magrittr,
+    rlang,
+    tibble,
+    tidyselect,
+    vctrs
