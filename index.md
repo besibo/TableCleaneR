@@ -1,0 +1,228 @@
+# TableCleaneR
+
+TableCleaneR provides small, focused helpers to **collapse duplicate
+rows defined by key columns** in tibbles/data frames, in a way that is
+safe for downstream analysis:
+
+- Key combinations are made unique by **collapsing** rows sharing the
+  same keys.
+- Selected columns can be **concatenated** to preserve information
+  (e.g. sources, comments).
+- Other divergent non-key fields are **replaced with typed `NA`** to
+  avoid silently mixing inconsistent values.
+- Companion functions help **audit** which groups require concatenation
+  and subset collapsed outputs accordingly.
+
+## Installation
+
+### Development version (GitHub)
+
+``` r
+# install.packages("pak")
+pak::pak("besibo/TableCleaneR")
+```
+
+(Alternatively)
+
+``` r
+# install.packages("devtools")
+devtools::install_github("besibo/TableCleaneR")
+```
+
+## Core functions
+
+TableCleaneR currently exposes four functions:
+
+- [`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md):
+  collapse duplicates to one row per key group; concatenate `.concat`
+  columns when needed; replace other divergent columns with `NA`.
+- [`collapse_candidates()`](https://besibo.github.io/TableCleaneR/reference/collapse_candidates.md):
+  return the **original input rows** belonging to groups where
+  concatenation would be needed for `.concat`.
+- [`collapse_concat_only()`](https://besibo.github.io/TableCleaneR/reference/collapse_concat_only.md):
+  return the **collapsed output** restricted to groups where
+  concatenation actually occurred.
+- [`collapse_no_concat()`](https://besibo.github.io/TableCleaneR/reference/collapse_no_concat.md):
+  return the **collapsed output** restricted to groups where no
+  concatenation was needed for `.concat`.
+
+## Quick start
+
+``` r
+library(TableCleaneR)
+library(dplyr)
+#> 
+#> Attachement du package : 'dplyr'
+#> Les objets suivants sont masqués depuis 'package:stats':
+#> 
+#>     filter, lag
+#> Les objets suivants sont masqués depuis 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+library(tibble)
+
+df <- tibble(
+  exam.num_collec = c(1, 1, 1, 2, 2),
+  mat.matrice = c("SER", "SER", "SER", "PLAS", "PLAS"),
+  spe.denomination = c(
+    "E. coli",
+    "E. coli",
+    "E. coli",
+    "S. aureus",
+    "S. aureus"
+  ),
+  result = c("POS", "NEG", "POS", "NEG", "NEG"), # divergent (non-concat) for key=1
+  value = c(10, 10, 12, 5, 5), # divergent (non-concat) for key=1
+  commentaire = c("first", NA, "repeat", "ok", "ok"), # concat target
+  source_info = c("labA", "labA", "labB", "labC", NA), # concat target
+  flag = c(TRUE, TRUE, TRUE, FALSE, FALSE) # constant within groups
+)
+
+df
+#> # A tibble: 5 × 8
+#>   exam.num_collec mat.matrice spe.denomination result value commentaire
+#>             <dbl> <chr>       <chr>            <chr>  <dbl> <chr>      
+#> 1               1 SER         E. coli          POS       10 first      
+#> 2               1 SER         E. coli          NEG       10 <NA>       
+#> 3               1 SER         E. coli          POS       12 repeat     
+#> 4               2 PLAS        S. aureus        NEG        5 ok         
+#> 5               2 PLAS        S. aureus        NEG        5 ok         
+#> # ℹ 2 more variables: source_info <chr>, flag <lgl>
+```
+
+### 1) Collapse duplicates safely
+
+``` r
+collapsed <- df %>%
+  collapse_by_keys(
+    exam.num_collec,
+    mat.matrice,
+    spe.denomination,
+    .concat = c(commentaire, source_info),
+    sep = " | ",
+    na_rm = TRUE,
+    warn = TRUE
+  )
+#> Warning: Divergent columns replaced by NA: result, value
+
+collapsed
+#> # A tibble: 2 × 8
+#>   exam.num_collec mat.matrice spe.denomination result value commentaire   
+#>             <dbl> <chr>       <chr>            <chr>  <dbl> <chr>         
+#> 1               1 SER         E. coli          <NA>      NA first | repeat
+#> 2               2 PLAS        S. aureus        NEG        5 ok            
+#> # ℹ 2 more variables: source_info <chr>, flag <lgl>
+```
+
+Expected behaviour (for the key group `(1, "SER", "E. coli")`):
+
+- `commentaire` becomes `"first | repeat"` (distinct non-NA values
+  concatenated),
+- `source_info` becomes `"labA | labB"`,
+- `result` and `value` become `NA` (divergent and not selected for
+  concatenation),
+- `flag` stays `TRUE` (constant within the group).
+
+### 2) Audit: which original rows would require concatenation?
+
+``` r
+candidates <- df %>%
+  collapse_candidates(
+    exam.num_collec,
+    mat.matrice,
+    spe.denomination,
+    .concat = c(commentaire, source_info),
+    na_rm = TRUE
+  )
+
+candidates
+#> # A tibble: 3 × 8
+#>   exam.num_collec mat.matrice spe.denomination result value commentaire
+#>             <dbl> <chr>       <chr>            <chr>  <dbl> <chr>      
+#> 1               1 SER         E. coli          POS       10 first      
+#> 2               1 SER         E. coli          NEG       10 <NA>       
+#> 3               1 SER         E. coli          POS       12 repeat     
+#> # ℹ 2 more variables: source_info <chr>, flag <lgl>
+```
+
+This returns the **input rows** for key groups where at least one
+`.concat` column has more than one distinct value.
+
+### 3) Keep only collapsed groups where concatenation occurred
+
+``` r
+only_concat <- df %>%
+  collapse_concat_only(
+    exam.num_collec,
+    mat.matrice,
+    spe.denomination,
+    .concat = c(commentaire, source_info),
+    sep = " | ",
+    na_rm = TRUE,
+    warn = FALSE
+  )
+
+only_concat
+#> # A tibble: 1 × 8
+#>   exam.num_collec mat.matrice spe.denomination result value commentaire   
+#>             <dbl> <chr>       <chr>            <chr>  <dbl> <chr>         
+#> 1               1 SER         E. coli          <NA>      NA first | repeat
+#> # ℹ 2 more variables: source_info <chr>, flag <lgl>
+```
+
+### 4) Keep only collapsed groups where no concatenation was needed
+
+``` r
+no_concat <- df %>%
+  collapse_no_concat(
+    exam.num_collec,
+    mat.matrice,
+    spe.denomination,
+    .concat = c(commentaire, source_info),
+    na_rm = TRUE,
+    warn = FALSE
+  )
+
+no_concat
+#> # A tibble: 1 × 8
+#>   exam.num_collec mat.matrice spe.denomination result value commentaire
+#>             <dbl> <chr>       <chr>            <chr>  <dbl> <chr>      
+#> 1               2 PLAS        S. aureus        NEG        5 ok         
+#> # ℹ 2 more variables: source_info <chr>, flag <lgl>
+```
+
+## Tidyselect support
+
+Column selection for `.concat` uses **tidyselect**
+(e.g. [`starts_with()`](https://tidyselect.r-lib.org/reference/starts_with.html),
+[`contains()`](https://tidyselect.r-lib.org/reference/starts_with.html),
+[`matches()`](https://tidyselect.r-lib.org/reference/starts_with.html),
+[`where()`](https://tidyselect.r-lib.org/reference/where.html)):
+
+``` r
+df %>%
+  collapse_by_keys(
+    exam.num_collec,
+    mat.matrice,
+    spe.denomination,
+    .concat = starts_with("source"),
+    sep = " | "
+  )
+#> Warning: Divergent columns replaced by NA: result, value, commentaire
+#> # A tibble: 2 × 8
+#>   exam.num_collec mat.matrice spe.denomination result value commentaire
+#>             <dbl> <chr>       <chr>            <chr>  <dbl> <chr>      
+#> 1               1 SER         E. coli          <NA>      NA <NA>       
+#> 2               2 PLAS        S. aureus        NEG        5 ok         
+#> # ℹ 2 more variables: source_info <chr>, flag <lgl>
+```
+
+## Notes
+
+- `.concat` columns return a character result when concatenation is
+  needed.
+- For non-`.concat` columns, divergent groups are replaced by typed `NA`
+  (to reduce accidental mixing of inconsistent values).
+- All functions are designed for use in tidyverse pipelines; selection
+  arguments are captured using tidyeval/tidyselect (no premature
+  evaluation).
