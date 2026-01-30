@@ -26,14 +26,14 @@ safe for downstream analysis:
 
 ``` r
 # install.packages("pak")
-pak::pak("YOUR_GITHUB_ORG/TableCleaneR")
+pak::pak("besibo/TableCleaneR")
 ```
 
 (Alternatively)
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("YOUR_GITHUB_ORG/TableCleaneR")
+devtools::install_github("besibo/TableCleaneR")
 ```
 
 ## Core functions
