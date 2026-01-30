@@ -6,7 +6,7 @@ distinct value within the group (respecting `na_rm`). It returns the
 *original input rows* belonging to those groups.
 
 This is useful for auditing or reviewing duplicates before applying
-[`collapse_by_keys()`](collapse_by_keys.md).
+[`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md).
 
 ## Usage
 

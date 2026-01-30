@@ -1,9 +1,10 @@
 # Collapse data and keep only key groups where concatenation occurs
 
 `collapse_concat_only()` returns a collapsed table (one row per key
-combination, as in [`collapse_by_keys()`](collapse_by_keys.md)), but
-restricted to key groups where concatenation is actually needed for at
-least one column selected by `.concat`.
+combination, as in
+[`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md)),
+but restricted to key groups where concatenation is actually needed for
+at least one column selected by `.concat`.
 
 "Concatenation is needed" means: within a key group, at least one
 `.concat` column has more than one distinct value (respecting `na_rm`).
@@ -47,8 +48,10 @@ collapse_concat_only(
 
 - warn:
 
-  Logical. Passed to [`collapse_by_keys()`](collapse_by_keys.md). If
-  `TRUE`, warns about non-`.concat` divergent columns replaced by `NA`.
+  Logical. Passed to
+  [`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md).
+  If `TRUE`, warns about non-`.concat` divergent columns replaced by
+  `NA`.
 
 ## Value
 

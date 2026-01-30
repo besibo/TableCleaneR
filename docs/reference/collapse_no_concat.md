@@ -1,16 +1,18 @@
 # Collapse data and keep only key groups where no concatenation is needed
 
 `collapse_no_concat()` returns a collapsed table (one row per key
-combination, as in [`collapse_by_keys()`](collapse_by_keys.md)), but
-restricted to key groups where *no* concatenation would be needed for
-columns selected by `.concat`.
+combination, as in
+[`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md)),
+but restricted to key groups where *no* concatenation would be needed
+for columns selected by `.concat`.
 
 "No concatenation is needed" means: within a key group, every `.concat`
 column has at most one distinct value (respecting `na_rm`).
 
 If `.concat` is `NULL`, the function returns the same result as
-[`collapse_by_keys()`](collapse_by_keys.md) with `.concat = NULL` (i.e.,
-no groups are excluded on the basis of concatenation).
+[`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md)
+with `.concat = NULL` (i.e., no groups are excluded on the basis of
+concatenation).
 
 ## Usage
 
@@ -43,8 +45,8 @@ collapse_no_concat(
 - sep:
 
   String used to separate concatenated values (passed to
-  [`collapse_by_keys()`](collapse_by_keys.md); only relevant if
-  `.concat` is not `NULL` and a group is collapsed).
+  [`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md);
+  only relevant if `.concat` is not `NULL` and a group is collapsed).
 
 - na_rm:
 
@@ -53,8 +55,10 @@ collapse_no_concat(
 
 - warn:
 
-  Logical. Passed to [`collapse_by_keys()`](collapse_by_keys.md). If
-  `TRUE`, warns about non-`.concat` divergent columns replaced by `NA`.
+  Logical. Passed to
+  [`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md).
+  If `TRUE`, warns about non-`.concat` divergent columns replaced by
+  `NA`.
 
 ## Value
 

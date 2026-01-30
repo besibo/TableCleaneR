@@ -33,18 +33,18 @@ devtools::install_github("besibo/TableCleaneR")
 
 TableCleaneR currently exposes four functions:
 
-- [`collapse_by_keys()`](reference/collapse_by_keys.md): collapse
-  duplicates to one row per key group; concatenate `.concat` columns
-  when needed; replace other divergent columns with `NA`.
-- [`collapse_candidates()`](reference/collapse_candidates.md): return
-  the **original input rows** belonging to groups where concatenation
-  would be needed for `.concat`.
-- [`collapse_concat_only()`](reference/collapse_concat_only.md): return
-  the **collapsed output** restricted to groups where concatenation
-  actually occurred.
-- [`collapse_no_concat()`](reference/collapse_no_concat.md): return the
-  **collapsed output** restricted to groups where no concatenation was
-  needed for `.concat`.
+- [`collapse_by_keys()`](https://besibo.github.io/TableCleaneR/reference/collapse_by_keys.md):
+  collapse duplicates to one row per key group; concatenate `.concat`
+  columns when needed; replace other divergent columns with `NA`.
+- [`collapse_candidates()`](https://besibo.github.io/TableCleaneR/reference/collapse_candidates.md):
+  return the **original input rows** belonging to groups where
+  concatenation would be needed for `.concat`.
+- [`collapse_concat_only()`](https://besibo.github.io/TableCleaneR/reference/collapse_concat_only.md):
+  return the **collapsed output** restricted to groups where
+  concatenation actually occurred.
+- [`collapse_no_concat()`](https://besibo.github.io/TableCleaneR/reference/collapse_no_concat.md):
+  return the **collapsed output** restricted to groups where no
+  concatenation was needed for `.concat`.
 
 ## Quick start
 
