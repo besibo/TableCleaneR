@@ -1,34 +1,3 @@
-if (!exists(".tc_resolve_keys", mode = "function")) {
-  .tc_resolve_keys <- function(.data, ...) {
-    qs <- rlang::enquos(...)
-    if (length(qs) == 0) {
-      rlang::abort("Provide at least one key column in `...`.")
-    }
-
-    exprs <- lapply(qs, rlang::get_expr)
-
-    # Preserve the legacy error message for the common case: bare column names only.
-    if (all(vapply(exprs, rlang::is_symbol, logical(1)))) {
-      key_names <- vapply(exprs, rlang::as_string, character(1))
-      missing_keys <- setdiff(key_names, names(.data))
-      if (length(missing_keys) > 0) {
-        rlang::abort(paste0(
-          "Key column(s) not found in `.data`: ",
-          paste(missing_keys, collapse = ", ")
-        ))
-      }
-      return(key_names)
-    }
-
-    key_names <- names(tidyselect::eval_select(rlang::expr(c(!!!qs)), .data))
-    if (length(key_names) == 0) {
-      rlang::abort("Key selection resulted in 0 columns.")
-    }
-    key_names
-  }
-}
-
-
 #' Extract original rows from key groups where concatenation would be required
 #'
 #' @description
@@ -79,8 +48,20 @@ collapse_candidates <- function(
 ) {
   stopifnot(is.data.frame(.data))
 
-  # --- resolve keys (supports bare names + tidyselect) ---
-  key_names <- .tc_resolve_keys(.data, ...)
+  # --- capture keys (tidyeval) ---
+  key_syms <- rlang::ensyms(...)
+  if (length(key_syms) == 0) {
+    rlang::abort("Provide at least one key column in `...`.")
+  }
+  key_names <- vapply(key_syms, rlang::as_string, character(1))
+
+  missing_keys <- setdiff(key_names, names(.data))
+  if (length(missing_keys) > 0) {
+    rlang::abort(paste0(
+      "Key column(s) not found in `.data`: ",
+      paste(missing_keys, collapse = ", ")
+    ))
+  }
 
   # --- capture .concat WITHOUT evaluating it; resolve via tidyselect ---
   concat_q <- rlang::enquo(.concat)
@@ -106,16 +87,19 @@ collapse_candidates <- function(
 
   # --- identify key combinations where any .concat column is truly divergent ---
   affected_keys <- .data %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(key_names))) %>%
+    dplyr::group_by(!!!key_syms) %>%
     dplyr::summarise(
-      .affected = any(dplyr::across(
+      dplyr::across(
         dplyr::all_of(concat_names),
         ~ {
           x <- if (na_rm) .x[!is.na(.x)] else .x
           dplyr::n_distinct(x) > 1
         }
-      )),
+      ),
       .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      .affected = rowSums(dplyr::across(dplyr::all_of(concat_names))) > 0
     ) %>%
     dplyr::filter(.data$.affected) %>%
     dplyr::select(dplyr::all_of(key_names))

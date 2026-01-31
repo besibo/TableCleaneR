@@ -1,34 +1,3 @@
-if (!exists(".tc_resolve_keys", mode = "function")) {
-  .tc_resolve_keys <- function(.data, ...) {
-    qs <- rlang::enquos(...)
-    if (length(qs) == 0) {
-      rlang::abort("Provide at least one key column in `...`.")
-    }
-
-    exprs <- lapply(qs, rlang::get_expr)
-
-    # Preserve the legacy error message for the common case: bare column names only.
-    if (all(vapply(exprs, rlang::is_symbol, logical(1)))) {
-      key_names <- vapply(exprs, rlang::as_string, character(1))
-      missing_keys <- setdiff(key_names, names(.data))
-      if (length(missing_keys) > 0) {
-        rlang::abort(paste0(
-          "Key column(s) not found in `.data`: ",
-          paste(missing_keys, collapse = ", ")
-        ))
-      }
-      return(key_names)
-    }
-
-    key_names <- names(tidyselect::eval_select(rlang::expr(c(!!!qs)), .data))
-    if (length(key_names) == 0) {
-      rlang::abort("Key selection resulted in 0 columns.")
-    }
-    key_names
-  }
-}
-
-
 #' Collapse duplicate key groups, concatenating selected columns and replacing other divergences with NA
 #'
 #' @description
@@ -114,8 +83,20 @@ collapse_by_keys <- function(
 ) {
   stopifnot(is.data.frame(.data))
 
-  # --- resolve keys (supports bare names + tidyselect) ---
-  key_names <- .tc_resolve_keys(.data, ...)
+  # --- capture keys (tidyeval) ---
+  key_syms <- rlang::ensyms(...)
+  if (length(key_syms) == 0) {
+    rlang::abort("Provide at least one key column in `...`.")
+  }
+  key_names <- vapply(key_syms, rlang::as_string, character(1))
+
+  missing_keys <- setdiff(key_names, names(.data))
+  if (length(missing_keys) > 0) {
+    rlang::abort(paste0(
+      "Key column(s) not found in `.data`: ",
+      paste(missing_keys, collapse = ", ")
+    ))
+  }
 
   # --- capture .concat WITHOUT evaluating it ---
   concat_q <- rlang::enquo(.concat)
@@ -139,7 +120,7 @@ collapse_by_keys <- function(
   # --- warning on NA-replaced columns (only na_cols) ---
   if (warn && length(na_cols) > 0) {
     div_any <- .data %>%
-      dplyr::group_by(dplyr::across(dplyr::all_of(key_names))) %>%
+      dplyr::group_by(!!!key_syms) %>%
       dplyr::summarise(
         dplyr::across(
           dplyr::all_of(na_cols),
@@ -179,7 +160,7 @@ collapse_by_keys <- function(
   }
 
   .data %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(key_names))) %>%
+    dplyr::group_by(!!!key_syms) %>%
     dplyr::summarise(
       dplyr::across(
         dplyr::all_of(non_key_cols),
