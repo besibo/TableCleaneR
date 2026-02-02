@@ -10,6 +10,7 @@
 #'
 #' @param .data A data frame or tibble.
 #' @param ... Key columns defining groups (tidyeval).
+#' @param .keys Optional alternative to …for programmatic key selection. Accepts either (i) a character vector of column names or (ii) a tidyselect expression evaluated in.data. If supplied, .keystakes precedence over…
 #' @param .concat A tidyselect specification of columns that may be concatenated. Must not be `NULL`.
 #' @param sep String used to separate concatenated values.
 #' @param na_rm Logical. If `TRUE`, ignore `NA` values for distinctness checks and concatenation.
@@ -47,6 +48,7 @@
 collapse_concat_only <- function(
   .data,
   ...,
+  .keys = NULL,
   .concat = NULL,
   sep = " ; ",
   na_rm = TRUE,
@@ -55,19 +57,8 @@ collapse_concat_only <- function(
   stopifnot(is.data.frame(.data))
 
   # Keys (tidyeval)
-  key_syms <- rlang::ensyms(...)
-  if (length(key_syms) == 0) {
-    rlang::abort("Provide at least one key column in `...`.")
-  }
-  key_names <- vapply(key_syms, rlang::as_string, character(1))
-
-  missing_keys <- setdiff(key_names, names(.data))
-  if (length(missing_keys) > 0) {
-    rlang::abort(paste0(
-      "Key column(s) not found in `.data`: ",
-      paste(missing_keys, collapse = ", ")
-    ))
-  }
+  keys_q <- rlang::enquo(.keys)
+  key_names <- .tc_resolve_keys(.data, ..., .keys = keys_q)
 
   # .concat captured without evaluation; resolved via tidyselect
   concat_q <- rlang::enquo(.concat)
@@ -91,7 +82,7 @@ collapse_concat_only <- function(
 
   # Identify key groups where concatenation would occur
   affected_keys <- .data %>%
-    dplyr::group_by(!!!key_syms) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_names))) %>%
     dplyr::summarise(
       dplyr::across(
         dplyr::all_of(concat_names),
@@ -113,6 +104,7 @@ collapse_concat_only <- function(
     merged_all <- collapse_by_keys(
       .data,
       ...,
+      .keys = !!keys_q,
       .concat = !!concat_q,
       sep = sep,
       na_rm = na_rm,
@@ -125,6 +117,7 @@ collapse_concat_only <- function(
   merged_all <- collapse_by_keys(
     .data,
     ...,
+    .keys = !!keys_q,
     .concat = !!concat_q,
     sep = sep,
     na_rm = na_rm,

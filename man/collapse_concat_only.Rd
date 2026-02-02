@@ -7,6 +7,7 @@
 collapse_concat_only(
   .data,
   ...,
+  .keys = NULL,
   .concat = NULL,
   sep = " ; ",
   na_rm = TRUE,
@@ -17,6 +18,8 @@ collapse_concat_only(
 \item{.data}{A data frame or tibble.}
 
 \item{...}{Key columns defining groups (tidyeval).}
+
+\item{.keys}{Optional alternative to …for programmatic key selection. Accepts either (i) a character vector of column names or (ii) a tidyselect expression evaluated in.data. If supplied, .keystakes precedence over…}
 
 \item{.concat}{A tidyselect specification of columns that may be concatenated. Must not be \code{NULL}.}
 

@@ -22,6 +22,7 @@
 #'
 #' @param .data A data frame or tibble.
 #' @param ... Key columns defining groups that must be unique in the output. Uses tidyeval.
+#' @param .keys Optional alternative to …for programmatic key selection. Accepts either (i) a character vector of column names or (ii) a tidyselect expression evaluated in.data. If supplied, .keystakes precedence over…
 #' @param .concat Optional tidyselect specification of non-key columns whose divergent values should
 #'   be concatenated. If `NULL` (default), no columns are concatenated.
 #' @param sep String used to separate concatenated values.
@@ -76,6 +77,7 @@
 collapse_by_keys <- function(
   .data,
   ...,
+  .keys = NULL,
   .concat = NULL,
   sep = " ; ",
   na_rm = TRUE,
@@ -84,19 +86,8 @@ collapse_by_keys <- function(
   stopifnot(is.data.frame(.data))
 
   # --- capture keys (tidyeval) ---
-  key_syms <- rlang::ensyms(...)
-  if (length(key_syms) == 0) {
-    rlang::abort("Provide at least one key column in `...`.")
-  }
-  key_names <- vapply(key_syms, rlang::as_string, character(1))
-
-  missing_keys <- setdiff(key_names, names(.data))
-  if (length(missing_keys) > 0) {
-    rlang::abort(paste0(
-      "Key column(s) not found in `.data`: ",
-      paste(missing_keys, collapse = ", ")
-    ))
-  }
+  keys_q <- rlang::enquo(.keys)
+  key_names <- .tc_resolve_keys(.data, ..., .keys = keys_q)
 
   # --- capture .concat WITHOUT evaluating it ---
   concat_q <- rlang::enquo(.concat)
@@ -120,7 +111,7 @@ collapse_by_keys <- function(
   # --- warning on NA-replaced columns (only na_cols) ---
   if (warn && length(na_cols) > 0) {
     div_any <- .data %>%
-      dplyr::group_by(!!!key_syms) %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(key_names))) %>%
       dplyr::summarise(
         dplyr::across(
           dplyr::all_of(na_cols),
@@ -160,7 +151,7 @@ collapse_by_keys <- function(
   }
 
   .data %>%
-    dplyr::group_by(!!!key_syms) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_names))) %>%
     dplyr::summarise(
       dplyr::across(
         dplyr::all_of(non_key_cols),

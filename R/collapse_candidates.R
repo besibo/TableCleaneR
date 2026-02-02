@@ -9,6 +9,7 @@
 #'
 #' @param .data A data frame or tibble.
 #' @param ... Key columns defining groups (tidyeval).
+#' @param .keys Optional alternative to …for programmatic key selection. Accepts either (i) a character vector of column names or (ii) a tidyselect expression evaluated in.data. If supplied, .keystakes precedence over…
 #' @param .concat A tidyselect specification of columns to check for divergence (and hence
 #'   potential concatenation). Must not be `NULL`.
 #' @param na_rm Logical. If `TRUE`, ignore `NA` values when assessing distinctness within a group.
@@ -39,29 +40,40 @@
 #'
 #' candidates
 #'
+#' candidates2 <- df %>%
+#'   collapse_candidates(
+#'     .keys = c("exam.num_collec", "mat.matrice", "spe.denomination"),
+#'     .concat = c(commentaire, source_info),
+#'     na_rm = TRUE
+#'   )
+#'
+#' candidates2
+#'
+#' identical(candidates, candidates2)
+#'
+#' candidates3 <- df %>%
+#'   collapse_candidates(
+#'     .keys = matches("^exam\\."),
+#'     .concat = c(commentaire, source_info),
+#'     na_rm = TRUE
+#'   )
+#'
+#' candidates3
+#'
+#'
 #' @export
 collapse_candidates <- function(
   .data,
   ...,
+  .keys = NULL,
   .concat = NULL,
   na_rm = TRUE
 ) {
   stopifnot(is.data.frame(.data))
 
   # --- capture keys (tidyeval) ---
-  key_syms <- rlang::ensyms(...)
-  if (length(key_syms) == 0) {
-    rlang::abort("Provide at least one key column in `...`.")
-  }
-  key_names <- vapply(key_syms, rlang::as_string, character(1))
-
-  missing_keys <- setdiff(key_names, names(.data))
-  if (length(missing_keys) > 0) {
-    rlang::abort(paste0(
-      "Key column(s) not found in `.data`: ",
-      paste(missing_keys, collapse = ", ")
-    ))
-  }
+  keys_q <- rlang::enquo(.keys)
+  key_names <- .tc_resolve_keys(.data, ..., .keys = keys_q)
 
   # --- capture .concat WITHOUT evaluating it; resolve via tidyselect ---
   concat_q <- rlang::enquo(.concat)
@@ -87,7 +99,7 @@ collapse_candidates <- function(
 
   # --- identify key combinations where any .concat column is truly divergent ---
   affected_keys <- .data %>%
-    dplyr::group_by(!!!key_syms) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(key_names))) %>%
     dplyr::summarise(
       dplyr::across(
         dplyr::all_of(concat_names),

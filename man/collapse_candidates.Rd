@@ -4,12 +4,14 @@
 \alias{collapse_candidates}
 \title{Extract original rows from key groups where concatenation would be required}
 \usage{
-collapse_candidates(.data, ..., .concat = NULL, na_rm = TRUE)
+collapse_candidates(.data, ..., .keys = NULL, .concat = NULL, na_rm = TRUE)
 }
 \arguments{
 \item{.data}{A data frame or tibble.}
 
 \item{...}{Key columns defining groups (tidyeval).}
+
+\item{.keys}{Optional alternative to …for programmatic key selection. Accepts either (i) a character vector of column names or (ii) a tidyselect expression evaluated in.data. If supplied, .keystakes precedence over…}
 
 \item{.concat}{A tidyselect specification of columns to check for divergence (and hence
 potential concatenation). Must not be \code{NULL}.}
@@ -49,5 +51,26 @@ candidates <- df \%>\%
   )
 
 candidates
+
+candidates2 <- df \%>\%
+  collapse_candidates(
+    .keys = c("exam.num_collec", "mat.matrice", "spe.denomination"),
+    .concat = c(commentaire, source_info),
+    na_rm = TRUE
+  )
+
+candidates2
+
+identical(candidates, candidates2)
+
+candidates3 <- df \%>\%
+  collapse_candidates(
+    .keys = matches("^exam\\\\."),
+    .concat = c(commentaire, source_info),
+    na_rm = TRUE
+  )
+
+candidates3
+
 
 }
