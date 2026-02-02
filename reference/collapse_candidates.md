@@ -11,7 +11,7 @@ This is useful for auditing or reviewing duplicates before applying
 ## Usage
 
 ``` r
-collapse_candidates(.data, ..., .concat = NULL, na_rm = TRUE)
+collapse_candidates(.data, ..., .keys = NULL, .concat = NULL, na_rm = TRUE)
 ```
 
 ## Arguments
@@ -23,6 +23,12 @@ collapse_candidates(.data, ..., .concat = NULL, na_rm = TRUE)
 - ...:
 
   Key columns defining groups (tidyeval).
+
+- .keys:
+
+  Optional alternative to …for programmatic key selection. Accepts
+  either (i) a character vector of column names or (ii) a tidyselect
+  expression evaluated in.data. If supplied, .keystakes precedence over…
 
 - .concat:
 
@@ -69,4 +75,38 @@ candidates
 #> 1               1 SER         E. coli          first       labA       
 #> 2               1 SER         E. coli          NA          labA       
 #> 3               1 SER         E. coli          repeat      labB       
+
+candidates2 <- df %>%
+  collapse_candidates(
+    .keys = c("exam.num_collec", "mat.matrice", "spe.denomination"),
+    .concat = c(commentaire, source_info),
+    na_rm = TRUE
+  )
+
+candidates2
+#> # A tibble: 3 × 5
+#>   exam.num_collec mat.matrice spe.denomination commentaire source_info
+#>             <dbl> <chr>       <chr>            <chr>       <chr>      
+#> 1               1 SER         E. coli          first       labA       
+#> 2               1 SER         E. coli          NA          labA       
+#> 3               1 SER         E. coli          repeat      labB       
+
+identical(candidates, candidates2)
+#> [1] TRUE
+
+candidates3 <- df %>%
+  collapse_candidates(
+    .keys = matches("^exam\\."),
+    .concat = c(commentaire, source_info),
+    na_rm = TRUE
+  )
+
+candidates3
+#> # A tibble: 3 × 5
+#>   exam.num_collec mat.matrice spe.denomination commentaire source_info
+#>             <dbl> <chr>       <chr>            <chr>       <chr>      
+#> 1               1 SER         E. coli          first       labA       
+#> 2               1 SER         E. coli          NA          labA       
+#> 3               1 SER         E. coli          repeat      labB       
+
 ```

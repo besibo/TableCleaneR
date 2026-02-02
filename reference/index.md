@@ -13,3 +13,5 @@
 - [`collapse_no_concat()`](https://besibo.github.io/TableCleaneR/reference/collapse_no_concat.md)
   : Collapse data and keep only key groups where no concatenation is
   needed
+- [`normalize_num_list()`](https://besibo.github.io/TableCleaneR/reference/normalize_num_list.md)
+  : Normalize a number list stored as a character string

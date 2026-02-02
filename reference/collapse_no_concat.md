@@ -20,6 +20,7 @@ concatenation).
 collapse_no_concat(
   .data,
   ...,
+  .keys = NULL,
   .concat = NULL,
   sep = " ; ",
   na_rm = TRUE,
@@ -36,6 +37,12 @@ collapse_no_concat(
 - ...:
 
   Key columns defining groups (tidyeval).
+
+- .keys:
+
+  Optional alternative to …for programmatic key selection. Accepts
+  either (i) a character vector of column names or (ii) a tidyselect
+  expression evaluated in.data. If supplied, .keystakes precedence over…
 
 - .concat:
 

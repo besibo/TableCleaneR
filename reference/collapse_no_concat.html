@@ -58,6 +58,7 @@ one distinct value (respecting <code>na_rm</code>).</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">collapse_no_concat</span><span class="op">(</span></span>
 <span>  <span class="va">.data</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  .keys <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  .concat <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sep <span class="op">=</span> <span class="st">" ; "</span>,</span>
 <span>  na_rm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -75,6 +76,10 @@ one distinct value (respecting <code>na_rm</code>).</p>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Key columns defining groups (tidyeval).</p></dd>
+
+
+<dt id="arg--keys">.keys<a class="anchor" aria-label="anchor" href="#arg--keys"></a></dt>
+<dd><p>Optional alternative to …for programmatic key selection. Accepts either (i) a character vector of column names or (ii) a tidyselect expression evaluated in.data. If supplied, .keystakes precedence over…</p></dd>
 
 
 <dt id="arg--concat">.concat<a class="anchor" aria-label="anchor" href="#arg--concat"></a></dt>

@@ -15,6 +15,7 @@ at least one column selected by `.concat`.
 collapse_concat_only(
   .data,
   ...,
+  .keys = NULL,
   .concat = NULL,
   sep = " ; ",
   na_rm = TRUE,
@@ -31,6 +32,12 @@ collapse_concat_only(
 - ...:
 
   Key columns defining groups (tidyeval).
+
+- .keys:
+
+  Optional alternative to …for programmatic key selection. Accepts
+  either (i) a character vector of column names or (ii) a tidyselect
+  expression evaluated in.data. If supplied, .keystakes precedence over…
 
 - .concat:
 

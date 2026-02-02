@@ -29,6 +29,7 @@ and therefore were replaced by `NA` (for affected groups).
 collapse_by_keys(
   .data,
   ...,
+  .keys = NULL,
   .concat = NULL,
   sep = " ; ",
   na_rm = TRUE,
@@ -46,6 +47,12 @@ collapse_by_keys(
 
   Key columns defining groups that must be unique in the output. Uses
   tidyeval.
+
+- .keys:
+
+  Optional alternative to …for programmatic key selection. Accepts
+  either (i) a character vector of column names or (ii) a tidyselect
+  expression evaluated in.data. If supplied, .keystakes precedence over…
 
 - .concat:
 
