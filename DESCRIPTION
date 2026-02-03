@@ -1,7 +1,7 @@
 Package: TableCleaneR
 Type: Package
 Title: Collapse Duplicate Key Groups in Tibbles with Safe Concatenation
-Version: 0.0.0.9000
+Version: 1.0.0
 Authors@R:
     person("Benoît", "Simon-Bouhet", email = "bsimonbo@univ-lr.fr", role = c("aut", "cre"))
 Description: Tools to enforce uniqueness of key combinations in tabular data by
